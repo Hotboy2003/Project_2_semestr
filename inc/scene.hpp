@@ -10,8 +10,7 @@ namespace ao
 		Scene(int width, int height);
 		~Scene();
 		void Konus(double a,double b,double c);
-		void El_Paraboloid();
-		double Vvod();
+		void El_Paraboloid(double a, double b);
 		void LifeCycle();
 
 	private:
