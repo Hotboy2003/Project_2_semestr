@@ -14,20 +14,20 @@ namespace ao
 		m_sprite = std::make_unique<sf::Sprite>(*m_texture);
 
 		Intrinsic intrinsic = { 960.0, 540.0, 960.0, 540.0 };
-		Point position = { 0.0, 0.0, 0.0 };
 		Angles angles = { 0.0,0.0,0.0 };
 		
 		m_color = new color[30000000];
 		m_points = new Point[30000000];
 
 		double k, a, b, c;
-		std::cout << "Введите число от 1 до 3. 1 - Конус. 2 - Эллиптический параболоид. 3 - Считать с файла (предварительно добавьте файл в ...)" << std::endl;
-		std::cout << "Предупреждение! Если вы введете неподходящую цифру, то отрисуется фигура по умолчанию.";
+		std::cout << "Введите число от 1 до 3. 1 - Конус. 2 - Эллиптический параболоид. 3 - Пересекающиеся прямые. 4 - Гиперболический параболоид." << std::endl;
+		std::cout << "5 - считать с файла" << std::endl;
+		std::cout << "Предупреждение! Если вы захотите считать с файла, то считывая координаты больше 1 млн, вы окажетесь слишком далеко от точек, которые программа считала" << std::endl;
 		
 		bool flag = true;
 		while (flag) {
 			std::cin >> k;
-			if (k < 3 && k >= 1)
+			if (k < 5 && k >= 1)
 			{
 				std::cout << "Теперь введите направляющие векторы фигуры (a,b,c)" << std::endl;
 				std::cout << "Предупреждение! Если вы введете слишком большие направляющие, то велика вероятность, что фигура не отрисуется.";
@@ -35,13 +35,33 @@ namespace ao
 				flag = false;
 			}
 			if (k == 1)
+			{
 				Konus(a, b, c);
+				Point position = { 0.0, 0.0, 0.0 };
+				m_camera = std::make_unique<Camera>(m_width, m_height, intrinsic, position, angles);
+			}
 			if (k == 2)
+			{
 				El_Paraboloid(a, b);
+				Point position = { 0.0, 0.0, 0.0 };
+				m_camera = std::make_unique<Camera>(m_width, m_height, intrinsic, position, angles);
+			}
 			if (k == 3)
 			{
+				Pryamye(a, b);
+				Point position = { 0.0, 0.0, 0.0 };
+				m_camera = std::make_unique<Camera>(m_width, m_height, intrinsic, position, angles);
+			}
+			if (k == 4)
+			{
+				Hyp_Paraboloid(a, b);
+				Point position = { 0.0, 0.0, 0.0 };
+				m_camera = std::make_unique<Camera>(m_width, m_height, intrinsic, position, angles);
+			}
+			if (k == 5)
+			{
 				flag = false;
-				std::ifstream in("points.txt");
+				std::ifstream in("points_1.txt");
 
 				if (!in.is_open())
 					std::cerr << "File not found" << std::endl;
@@ -58,15 +78,13 @@ namespace ao
 					m_size++;
 				}
 				Point position = { m_points[1].x, m_points[1].y, m_points[1].z };
-
-				std::cout << m_points[1].x << " " << m_points[1].y << " " << m_points[1].z;
+				m_camera = std::make_unique<Camera>(m_width, m_height, intrinsic, position, angles);
 			}
-			if ( k < 1 || k > 3)
+			if ( k < 1 || k > 5)
 			{
 				std::cout << "Серьезно? Давайте попробуем еще раз!";
 			}
 		}
-		m_camera = std::make_unique<Camera>(m_width, m_height, intrinsic, position, angles);
 	}
 	Scene::~Scene()
 	{
@@ -96,8 +114,8 @@ namespace ao
 				m_points[m_size].y = y;
 				m_points[m_size].z = -sqrt((x_2 * c_2) / a_2 + (y_2 * c_2) / b_2);
 				m_color[m_size].r = int(x) + 127;
-				m_color[m_size].g = int(x) + 127;
-				m_color[m_size].b = 127 - int(x);
+				m_color[m_size].g = 127 - int(x);
+				m_color[m_size].b = int(x) + 127;
 				m_size++;
 			}
 	}
@@ -115,6 +133,49 @@ namespace ao
 				m_points[m_size].x = x;
 				m_points[m_size].y = y;
 				m_points[m_size].z = (x_2/a_2 + y_2/b_2) / 2;
+				m_color[m_size].r = 127 - int(x);
+				m_color[m_size].g = int(x) + 127;
+				m_color[m_size].b = int(x) + 127;
+				m_size++;
+			}
+	}
+
+	void Scene::Pryamye(double a, double b)
+	{
+		for (double x = -127; x < 127; x++)
+		{
+			double x_2 = pow(x, 2);
+			double a_2 = pow(a, 2);
+			double b_2 = pow(b, 2);
+
+			m_points[m_size].x = x;
+			m_points[m_size].y = sqrt(x_2*b_2/a_2);
+			m_color[m_size].r = 127 - int(x);
+			m_color[m_size].g = int(x) + 127;
+			m_color[m_size].b = int(x) + 127;
+			m_size++;
+			m_points[m_size].x = x;
+			m_points[m_size].y = -sqrt(x_2 * b_2 / a_2);
+			m_color[m_size].r = 127 - int(x);
+			m_color[m_size].g = int(x) + 127;
+			m_color[m_size].b = int(x) + 127;
+			m_size++;
+		}
+	}
+
+	void Scene::Hyp_Paraboloid(double a, double b)
+	{
+		for (double x = -127; x < 127; x++)
+			for (double y = -127; y < 127; y++)
+			{
+				double x_2 = pow(x, 2);
+				double y_2 = pow(y, 2);
+				double a_2 = pow(a, 2);
+				double b_2 = pow(b, 2);
+
+				m_points[m_size].x = x;
+				m_points[m_size].y = y;
+				m_points[m_size].z = (x_2 / a_2 - y_2 / b_2) / 2;
 				m_color[m_size].r = 127 - int(x);
 				m_color[m_size].g = int(x) + 127;
 				m_color[m_size].b = int(x) + 127;
